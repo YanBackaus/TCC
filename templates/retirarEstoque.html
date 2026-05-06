@@ -1,0 +1,36 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Retirar Estoque
+{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <section class="content-card">
+            <div class="text-center content-card-header">
+                <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                <h1 class="section-title mt-3 mb-2">Retirar estoque</h1>
+                <p class="section-subtitle mb-0">Saída de estoque para {{ estoque.epi_nome }}. Se o mínimo for atingido, o sistema notifica.</p>
+            </div>
+
+            <form method="POST" action="/retirar_estoque/{{ estoque.id }}" class="d-grid gap-3">
+                {{ csrf_token_field() }}
+                <div>
+                    <label class="form-label">ID do produto</label>
+                    <input class="form-control inputlogin" type="text" value="{{ estoque.epi_id }}" disabled>
+                </div>
+                <div>
+                    <label class="form-label">Quantidade atual</label>
+                    <input class="form-control inputlogin" type="text" value="{{ estoque.quantidade }}" disabled>
+                </div>
+                <div>
+                    <label class="form-label" for="quantidade">Quantidade para retirar</label>
+                    <input class="form-control inputlogin" id="quantidade" type="number" name="quantidade" placeholder="Quantidade de saída" value="{{ form_data.get('quantidade', '') }}">
+                </div>
+                <button class="btn btn-brand botaologin w-100" type="submit">Retirar estoque</button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Registro de Entradas e saídas
+{% endblock %}
+
+{% block conteudo %}
+<section class="content-card table-card">
+    <div class="content-card-header page-header">
+        <div class="page-header-main">
+            <h1 class="page-title">Registro de Entradas e saídas</h1>
+            <p class="page-subtitle">Acompanhe com mais detalhes cada movimentacao de estoque realizada no sistema.</p>
+        </div>
+        <div class="page-header-actions">
+            <a
+                href="{{ url_for('exportar_registro_movimentacoes_excel', busca=search) }}"
+                class="btn btn-outline-brand btn-sm"
+            >
+                Exportar Excel
+            </a>
+            <a
+                href="{{ url_for('exportar_registro_movimentacoes_pdf', busca=search) }}"
+                class="btn btn-outline-dark rounded-pill btn-sm"
+            >
+                Exportar PDF
+            </a>
+            <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline">
+                <span class="dashboard-label">Movimentações listadas</span>
+                <strong class="dashboard-value">{{ logs|length }}</strong>
+                <span class="dashboard-caption">Resultados visiveis na consulta</span>
+            </section>
+        </div>
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline">
+                <span class="dashboard-label">Entradas</span>
+                <strong class="dashboard-value">{{ logs|selectattr('tipo', 'equalto', 1)|list|length }}</strong>
+                <span class="dashboard-caption">Registros de entrada no estoque</span>
+            </section>
+        </div>
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline dashboard-metric-warning">
+                <span class="dashboard-label">Saídas</span>
+                <strong class="dashboard-value">{{ logs|selectattr('tipo', 'equalto', 3)|list|length }}</strong>
+                <span class="dashboard-caption">Retiradas registradas do estoque</span>
+            </section>
+        </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('pagina_registro_movimentacoes') }}" class="row g-3 align-items-end mb-4 filter-bar">
+        <div class="col-12 col-lg-8">
+            <label class="form-label" for="busca-log">Pesquisar movimentacao</label>
+            <input
+                class="form-control"
+                id="busca-log"
+                type="search"
+                name="busca"
+                    placeholder="Digite tipo, produto, usuário ou data"
+                value="{{ search }}"
+            >
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <button type="submit" class="btn btn-brand w-100">Pesquisar</button>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <a href="{{ url_for('pagina_registro_movimentacoes') }}" class="btn btn-outline-dark rounded-pill w-100">Limpar</a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table app-table align-middle">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Produto</th>
+                    <th>Quantidade</th>
+                    <th>Usuário</th>
+                    <th>Data</th>
+                    <th>Detalhe</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td data-label="Tipo">{{ log.tipo_label }}</td>
+                    <td data-label="Produto">{{ log.epi_nome }}</td>
+                    <td data-label="Quantidade">
+                        {% if log.tipo == 2 %}
+                            {% if log.quantidade > 0 %}
+                            +{{ log.quantidade }}
+                            {% else %}
+                            {{ log.quantidade }}
+                            {% endif %}
+                        {% else %}
+                            {{ log.quantidade }}
+                        {% endif %}
+                    </td>
+                    <td data-label="Usuário">{{ log.usuario_nome }}</td>
+                    <td data-label="Data">{{ log.data }}</td>
+                    <td data-label="Detalhe">
+                        {% if log.tipo == 1 %}
+                        <span class="badge text-bg-success">Entrada registrada</span>
+                        {% elif log.tipo == 2 %}
+                        <span class="badge text-bg-secondary">Edição de estoque</span>
+                        {% else %}
+                        <span class="badge text-bg-warning">Saída registrada</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-secondary">
+                        Nenhuma movimentacao encontrada para a pesquisa informada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+

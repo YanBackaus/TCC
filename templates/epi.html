@@ -1,0 +1,131 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Gerenciador
+{% endblock %}
+
+{% block conteudo %}
+<section class="content-card table-card">
+    <div class="content-card-header page-header">
+        <div class="page-header-main">
+            <h1 class="page-title">Gerenciar produtos</h1>
+            <p class="page-subtitle">Registre, edite, ative e desative os produtos cadastrados.</p>
+        </div>
+        <div class="page-header-actions">
+            <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline">
+                <span class="dashboard-label">Produtos listados</span>
+                <strong class="dashboard-value">{{ produtos|length }}</strong>
+                <span class="dashboard-caption">Resultado da busca atual</span>
+            </section>
+        </div>
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline">
+                <span class="dashboard-label">Ativos</span>
+                <strong class="dashboard-value">{{ produtos|selectattr('status')|list|length }}</strong>
+                <span class="dashboard-caption">Disponiveis para movimentacao</span>
+            </section>
+        </div>
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline dashboard-metric-warning">
+                <span class="dashboard-label">Acabando</span>
+                <strong class="dashboard-value">{{ produtos|selectattr('estoque_baixo')|list|length }}</strong>
+                <span class="dashboard-caption">produtos no mínimo ou abaixo</span>
+            </section>
+        </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('pagina_epi') }}" class="row g-3 align-items-end mb-4 filter-bar">
+        <div class="col-12 col-lg-8">
+            <label class="form-label" for="busca-epi">Pesquisar produto</label>
+            <input
+                class="form-control"
+                id="busca-epi"
+                type="search"
+                name="busca"
+                placeholder="Digite nome, tipo, descrição, CA ou status"
+                value="{{ search }}"
+            >
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <button type="submit" class="btn btn-brand w-100">Pesquisar</button>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <a href="{{ url_for('pagina_epi') }}" class="btn btn-outline-dark rounded-pill w-100">Limpar</a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table app-table align-middle">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>Descrição</th>
+                    <th>Mínimo</th>
+                    <th>CA</th>
+                    <th>Estoque</th>
+                    <th>Status</th>
+                    <th class="table-actions">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for produto in produtos %}
+                <tr>
+                    <td data-label="Nome">{{ produto.nome }}</td>
+                    <td data-label="Tipo">{{ produto.tipo }}</td>
+                    <td data-label="Descrição">{{ produto.descricao }}</td>
+                    <td data-label="Mínimo">{{ produto.quantidadeMin }}</td>
+                    <td data-label="CA">{{ produto.ca }}</td>
+                    <td data-label="Estoque">
+                        {{ produto.estoque_atual }}
+                        {% if produto.estoque_baixo %}
+                        <span class="badge text-bg-warning ms-2">Acabando</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Status">
+                        <span class="badge {% if produto.status %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                            {{ produto.status_label }}
+                        </span>
+                    </td>
+                    <td class="table-actions" data-label="Ações">
+                        {% if session.get('tipo') == 1 %}
+                        <div class="action-group">
+                            <a href="{{ url_for('editar_epi_route', epi_id=produto.id) }}" class="action-button action-button-primary">Editar</a>
+                            {% if produto.status %}
+                            <form method="POST" action="{{ url_for('desativar_epi_route', epi_id=produto.id) }}" class="m-0">
+                                {{ csrf_token_field() }}
+                                <button type="submit" class="action-button action-button-danger">Desativar</button>
+                            </form>
+                            {% else %}
+                            <form method="POST" action="{{ url_for('ativar_epi_route', epi_id=produto.id) }}" class="m-0">
+                                {{ csrf_token_field() }}
+                                <button type="submit" class="action-button action-button-success">Ativar</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <span class="dashboard-caption">Consulta</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-secondary">
+                        Nenhum produto encontrado para a pesquisa informada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+
+

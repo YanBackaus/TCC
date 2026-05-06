@@ -1,0 +1,119 @@
+{% extends "template.html" %}
+{% from "_help_tooltip.html" import help_tooltip %}
+
+{% block titulo %}
+Cadastro de produto
+{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <section class="content-card form-screen-card">
+            <div class="form-screen-hero">
+                <div class="form-screen-header">
+                    <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                    <div class="form-screen-copy">
+                        <span class="form-screen-kicker">Cadastro de produto</span>
+                        <h1 class="form-screen-title">Registrar produto</h1>
+                        <p class="form-screen-subtitle">Cadastre um novo produto com os dados operacionais que vao alimentar o estoque e os alertas de reposição.</p>
+                    </div>
+                </div>
+
+                <div class="form-screen-chip-row">
+                    <span class="form-screen-chip">CA opcional</span>
+                    <span class="form-screen-chip">Tipo do produto</span>
+                    <span class="form-screen-chip">Gera estoque inicial</span>
+                    <span class="form-screen-chip">Alerta por quantidade mínima</span>
+                </div>
+            </div>
+
+            <div class="form-screen-body">
+                <div class="form-help-inline form-help-inline-start">
+                    <span class="form-tip-label">Ajuda da tela</span>
+                    {% call help_tooltip("Ajuda sobre o cadastro de produto", wide=True) %}
+                    <strong class="help-tooltip-title">Antes de cadastrar</strong>
+                    <p class="help-tooltip-text mb-0">Preencha os dados do produto com o nome usado pela equipe, uma descrição clara, o CA correto e a quantidade mínima que deve disparar alerta de reposição.</p>
+                    {% endcall %}
+                </div>
+
+                <form method="POST" action="/add_cadastro_epi" class="form-screen-form">
+                    {{ csrf_token_field() }}
+                    <div class="form-grid">
+                        <div class="field-span-full">
+                            <div class="field-label-row">
+                                <label class="form-label" for="nome">Nome</label>
+                                {% call help_tooltip("Ajuda sobre o campo Nome do produto") %}
+                                <strong class="help-tooltip-title">Nome do produto</strong>
+                                <p class="help-tooltip-text mb-0">Exemplo: Luva nitrílica, Capacete branco ou Óculos de proteção.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" id="nome" type="text" name="nome" placeholder="Nome do produto" value="{{ form_data.get('nome', '') }}">
+                        </div>
+
+                        <div class="field-span-full">
+                            <div class="field-label-row">
+                                <label class="form-label" for="tipo">Tipo</label>
+                                {% call help_tooltip("Ajuda sobre o campo Tipo do produto") %}
+                                <strong class="help-tooltip-title">Tipo do produto</strong>
+                                <p class="help-tooltip-text mb-0">Informe a categoria do item, como Proteção facial, Luvas, Uniforme ou Calçado.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" id="tipo" type="text" name="tipo" placeholder="Tipo do produto" value="{{ form_data.get('tipo', '') }}">
+                        </div>
+
+                        <div class="field-span-full">
+                            <div class="field-label-row">
+                                <label class="form-label" for="descricao">Descrição</label>
+                                {% call help_tooltip("Ajuda sobre o campo Descrição") %}
+                                <strong class="help-tooltip-title">Descrição curta</strong>
+                                <p class="help-tooltip-text mb-0">Descreva de forma curta o modelo, uso ou característica principal do item.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" id="descricao" type="text" name="descricao" placeholder="Descrição do produto" value="{{ form_data.get('descricao', '') }}">
+                        </div>
+
+                        <div>
+                            <div class="field-label-row">
+                                <label class="form-label" for="quantidadeMin">Quantidade mínima opcional</label>
+                                {% call help_tooltip("Ajuda sobre o campo Quantidade mínima") %}
+                                <strong class="help-tooltip-title">Limite de alerta</strong>
+                                <p class="help-tooltip-text mb-0">Quando o estoque ficar nesse valor ou abaixo dele, o sistema vai avisar que é preciso comprar mais.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" id="quantidadeMin" type="number" name="quantidadeMin" placeholder="0" value="{{ form_data.get('quantidadeMin', '') }}">
+                        </div>
+
+                        <div>
+                            <div class="field-label-row">
+                                <label class="form-label" for="ca">CA opcional</label>
+                                {% call help_tooltip("Ajuda sobre o campo CA") %}
+                                <strong class="help-tooltip-title">Certificado de Aprovacao</strong>
+                                <p class="help-tooltip-text mb-0">Informe o numero do Certificado de Aprovacao do produto.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" id="ca" type="number" name="ca" placeholder="Numero do CA" value="{{ form_data.get('ca', '') }}">
+                        </div>
+
+                        <div class="field-span-full">
+                            <div class="field-label-row">
+                                <label class="form-label" for="quantidadeEstoque">Quantidade inicial no estoque opcional</label>
+                                {% call help_tooltip("Ajuda sobre o campo Quantidade inicial") %}
+                                <strong class="help-tooltip-title">Primeira entrada</strong>
+                                <p class="help-tooltip-text mb-0">Essa quantidade será criada automaticamente no estoque logo depois do cadastro do produto.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" id="quantidadeEstoque" type="number" name="quantidadeEstoque" placeholder="Quantidade que vai para o estoque" value="{{ form_data.get('quantidadeEstoque', '') }}">
+                        </div>
+                    </div>
+
+                    <div class="form-submit-wrap">
+                        <button class="btn btn-brand botaologin" type="submit">Registrar produto</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+

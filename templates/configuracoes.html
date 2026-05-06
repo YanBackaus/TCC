@@ -1,0 +1,136 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Configurações
+{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+        <section class="content-card">
+            <div class="content-card-header page-header">
+                <div class="page-header-main">
+                    <h1 class="page-title">Configurações de e-mail</h1>
+                    <p class="page-subtitle">Defina o e-mail do setor de compras e os dados SMTP usados pelo sistema.</p>
+                </div>
+                <div class="page-header-actions">
+                    <a class="btn btn-outline-dark rounded-pill" href="{{ url_for('pagina_emails_teste') }}">
+                        Ver e-mails de teste
+                    </a>
+                    <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('pagina_configuracoes') }}" class="row g-3">
+                {{ csrf_token_field() }}
+                <div class="col-12">
+                    <label class="form-label" for="app_base_url">URL base do sistema</label>
+                    <input
+                        class="form-control"
+                        id="app_base_url"
+                        type="url"
+                        name="app_base_url"
+                        value="{{ form_data.get('app_base_url', '') }}"
+                        placeholder="http://127.0.0.1:5000"
+                    >
+                </div>
+                <div class="col-12 col-lg-6">
+                    <label class="form-label" for="purchase_department_email">E-mail do setor de compras</label>
+                    <input
+                        class="form-control"
+                        id="purchase_department_email"
+                        type="email"
+                        name="purchase_department_email"
+                        value="{{ form_data.get('purchase_department_email', '') }}"
+                        placeholder="compras@empresa.com"
+                    >
+                </div>
+                <div class="col-12 col-lg-6">
+                    <label class="form-label" for="mail_default_sender">Remetente padrão</label>
+                    <input
+                        class="form-control"
+                        id="mail_default_sender"
+                        type="email"
+                        name="mail_default_sender"
+                        value="{{ form_data.get('mail_default_sender', '') }}"
+                        placeholder="no-reply@empresa.com"
+                    >
+                </div>
+                <div class="col-12 col-lg-6">
+                    <label class="form-label" for="mail_server">Servidor SMTP</label>
+                    <input
+                        class="form-control"
+                        id="mail_server"
+                        type="text"
+                        name="mail_server"
+                        value="{{ form_data.get('mail_server', '') }}"
+                        placeholder="smtp.empresa.com"
+                    >
+                </div>
+                <div class="col-12 col-lg-3">
+                    <label class="form-label" for="mail_port">Porta</label>
+                    <input
+                        class="form-control"
+                        id="mail_port"
+                        type="number"
+                        name="mail_port"
+                        value="{{ form_data.get('mail_port', '') }}"
+                        placeholder="587"
+                    >
+                </div>
+                <div class="col-12 col-lg-3">
+                    <label class="form-label" for="mail_username">Usuário SMTP</label>
+                    <input
+                        class="form-control"
+                        id="mail_username"
+                        type="email"
+                        name="mail_username"
+                        value="{{ form_data.get('mail_username', '') }}"
+                        placeholder="smtp@empresa.com"
+                    >
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="mail_password">Senha SMTP</label>
+                    <input
+                        class="form-control"
+                        id="mail_password"
+                        type="password"
+                        name="mail_password"
+                        placeholder="{% if form_data.get('mail_password_configured') %}Deixe em branco para manter a senha atual{% else %}Informe a senha do e-mail{% endif %}"
+                    >
+                </div>
+                <div class="col-12">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <div class="form-check setting-check">
+                                <input class="form-check-input" type="checkbox" id="mail_use_tls" name="mail_use_tls" {% if form_data.get('mail_use_tls') %}checked{% endif %}>
+                                <label class="form-check-label" for="mail_use_tls">Usar TLS</label>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="form-check setting-check">
+                                <input class="form-check-input" type="checkbox" id="mail_use_ssl" name="mail_use_ssl" {% if form_data.get('mail_use_ssl') %}checked{% endif %}>
+                                <label class="form-check-label" for="mail_use_ssl">Usar SSL</label>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="form-check setting-check">
+                                <input class="form-check-input" type="checkbox" id="mail_suppress_send" name="mail_suppress_send" {% if form_data.get('mail_suppress_send') %}checked{% endif %}>
+                                <label class="form-check-label" for="mail_suppress_send">Modo teste sem envio</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="settings-help">
+                        <strong>Observação:</strong> use `TLS` ou `SSL`, não os dois ao mesmo tempo. O modo teste registra a tentativa de envio sem enviar e-mail real.
+                    </div>
+                </div>
+                <div class="col-12 d-flex justify-content-end">
+                    <button class="btn btn-brand px-4" type="submit">Salvar configurações</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

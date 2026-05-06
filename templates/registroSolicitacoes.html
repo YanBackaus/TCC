@@ -1,0 +1,145 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Registro de solicitações
+{% endblock %}
+
+{% block conteudo %}
+{% set pedidos_abertos = pedidos | rejectattr("encerrado") | list %}
+{% set pedidos_encerrados = pedidos | selectattr("encerrado") | list %}
+
+<section class="content-card table-card">
+    <div class="content-card-header page-header">
+        <div class="page-header-main">
+            <h1 class="page-title">Registro de solicitações</h1>
+            <p class="page-subtitle">
+                    Consulte as solicitações enviadas ao setor de compras e conclua cada uma com entrada de estoque ou sem entrada, quando necessário.
+            </p>
+        </div>
+        <div class="page-header-actions">
+            <a
+                href="{{ url_for('exportar_registro_solicitacoes_excel', busca=search) }}"
+                class="btn btn-outline-brand btn-sm"
+            >
+                Exportar Excel
+            </a>
+            <a
+                href="{{ url_for('exportar_registro_solicitacoes_pdf', busca=search) }}"
+                class="btn btn-outline-dark rounded-pill btn-sm"
+            >
+                Exportar PDF
+            </a>
+            <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline">
+                <span class="dashboard-label">Solicitações listadas</span>
+                <strong class="dashboard-value">{{ pedidos|length }}</strong>
+                <span class="dashboard-caption">Resultados visiveis na consulta</span>
+            </section>
+        </div>
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline dashboard-metric-warning">
+                <span class="dashboard-label">Abertas</span>
+                <strong class="dashboard-value">{{ pedidos_abertos|length }}</strong>
+                <span class="dashboard-caption">Ainda pendentes de acompanhamento</span>
+            </section>
+        </div>
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline">
+                <span class="dashboard-label">Encerradas</span>
+                <strong class="dashboard-value">{{ pedidos_encerrados|length }}</strong>
+                <span class="dashboard-caption">Solicitações já concluídas ou fechadas</span>
+            </section>
+        </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('pagina_registro_solicitacoes') }}" class="row g-3 align-items-end mb-4 filter-bar">
+        <div class="col-12 col-lg-8">
+            <label class="form-label" for="busca-pedido">Pesquisar solicitação</label>
+            <input
+                class="form-control"
+                id="busca-pedido"
+                type="search"
+                name="busca"
+                placeholder="Digite produto, usuário, status, observação ou data"
+                value="{{ search }}"
+            >
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <button type="submit" class="btn btn-brand w-100">Pesquisar</button>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <a href="{{ url_for('pagina_registro_solicitacoes') }}" class="btn btn-outline-dark rounded-pill w-100">Limpar</a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table app-table align-middle">
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Quantidade</th>
+                    <th>Solicitante</th>
+                    <th>Status</th>
+                    <th>Data</th>
+                    <th>Observação</th>
+                    <th class="table-actions">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pedido in pedidos %}
+                <tr>
+                    <td data-label="Produto">{{ pedido.epi_nome }}</td>
+                    <td data-label="Quantidade">{{ pedido.quantidade }} unidade(s)</td>
+                    <td data-label="Solicitante">{{ pedido.usuario_nome }}</td>
+                    <td data-label="Status">
+                        <span class="badge {{ pedido.status_badge_class }}">{{ pedido.status_label }}</span>
+                    </td>
+                    <td data-label="Data">{{ pedido.data_pedido }}</td>
+                    <td data-label="Observação">{{ pedido.observacao or 'Sem observação.' }}</td>
+                    <td class="table-actions" data-label="Ações">
+                        {% if not pedido.encerrado %}
+                        <div class="action-group request-actions-stack">
+                            <a
+                                href="{{ url_for('registrar_estoque_route', epi_id=pedido.epi_id, pedido_id=pedido.id) }}"
+                                class="action-button action-button-primary"
+                            >
+                                Registrar entrada e concluir
+                            </a>
+
+                            <form action="{{ url_for('encerrar_solicitacao_route', pedido_id=pedido.id) }}" method="POST">
+                                {{ csrf_token_field() }}
+                                <button type="submit" class="action-button action-button-neutral">
+                                    Encerrar sem entrada
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <span class="dashboard-caption">
+                            {% if pedido.status == "concluido_com_entrada" %}
+                            Concluida junto de uma entrada de estoque.
+                            {% else %}
+                            Encerrada sem necessidade de entrada.
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-secondary">
+                        Nenhuma solicitação encontrada para a pesquisa informada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+

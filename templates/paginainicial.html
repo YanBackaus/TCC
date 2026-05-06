@@ -1,0 +1,417 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Página inicial
+{% endblock %}
+
+{% block conteudo %}
+{% set selected_item = dashboard.itens_dashboard | selectattr("id", "equalto", dashboard.selected_item_id) | list | first %}
+{% if not selected_item and dashboard.itens_dashboard %}
+    {% set selected_item = dashboard.itens_dashboard[0] %}
+{% endif %}
+
+<section class="content-card dashboard-hero">
+    <div class="row g-4 align-items-stretch">
+        <div class="col-12 col-xl-8">
+            <div class="dashboard-hero-copy">
+                <span class="dashboard-kicker">Painel do almoxarifado</span>
+                <h1 class="dashboard-hero-title">Dashboard de estoque</h1>
+                <p class="dashboard-hero-text">
+                    Acompanhe o estoque de forma mais direta, escolha um item pelo nome e veja rapidamente
+                    como o estoque dele vem se comportando ao longo das movimentações.
+                </p>
+
+                <div class="dashboard-pill-row">
+                    <span class="dashboard-pill dashboard-pill-warning">{{ dashboard.resumo.itens_baixos }} em atenção</span>
+                    <span class="dashboard-pill">{{ dashboard.resumo.pedidos_abertos }} solicitação(ões) abertas</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4">
+            <div class="dashboard-hero-side">
+                <img class="brand-mark brand-mark-lg" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                <div class="dashboard-quick-actions">
+                    <a href="{{ url_for('pagina_estoque') }}" class="btn btn-brand">Ir para estoque</a>
+                    <a href="{{ url_for('pagina_registro_movimentacoes') }}" class="btn btn-outline-dark rounded-pill">Registro de entradas e saídas</a>
+                    <a href="{{ url_for('pagina_registro_solicitacoes') }}" class="btn btn-outline-dark rounded-pill">Registro de solicitações</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="row g-4 mt-1">
+    <div class="col-12 col-lg-6">
+        <section class="dashboard-metric dashboard-metric-warning">
+            <span class="dashboard-label">Produtos em atenção</span>
+            <strong class="dashboard-value">{{ dashboard.resumo.itens_baixos }}</strong>
+            <span class="dashboard-caption">Itens no mínimo ou abaixo dele</span>
+        </section>
+    </div>
+    <div class="col-12 col-lg-6">
+        <section class="dashboard-metric dashboard-metric-muted">
+            <span class="dashboard-label">Solicitações abertas</span>
+            <strong class="dashboard-value">{{ dashboard.resumo.pedidos_abertos }}</strong>
+            <span class="dashboard-caption">Pendencias ainda aguardando conclusao</span>
+        </section>
+    </div>
+</div>
+
+<section class="content-card dashboard-live-panel mt-4">
+    <div class="content-card-header">
+        <h2 class="page-title fs-4">Acompanhar produto por nome</h2>
+        <p class="page-subtitle">
+            Selecione um produto na lista para atualizar o painel ao lado com detalhes do produto e o histórico de quantidade.
+        </p>
+    </div>
+
+    {% if dashboard.itens_dashboard and selected_item %}
+    <div class="dashboard-live-grid">
+        <aside class="dashboard-selector-card">
+            <div class="dashboard-selector-header">
+                <span class="dashboard-label">Produtos monitorados</span>
+                <p class="dashboard-caption mb-0">Lista rapida somente com os nomes dos itens ativos.</p>
+            </div>
+
+            <div class="dashboard-selector-list" role="listbox" aria-label="Produtos monitorados">
+                {% for item in dashboard.itens_dashboard %}
+                <button
+                    type="button"
+                    class="dashboard-selector-button{% if item.id == selected_item.id %} is-active{% endif %}{% if item.estoque_baixo %} is-alert{% endif %}"
+                    data-dashboard-select
+                    data-epi-id="{{ item.id }}"
+                >
+                    {{ item.nome }}
+                </button>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <div class="dashboard-detail-shell">
+            <section class="dashboard-detail-card">
+                <div class="dashboard-detail-main">
+                    <div>
+                        <span class="dashboard-kicker">Produto selecionado</span>
+                        <h2 class="dashboard-detail-title" id="dashboard-item-name">{{ selected_item.nome }}</h2>
+                        <p class="dashboard-detail-text" id="dashboard-item-description">
+                            {{ selected_item.descricao or "Sem descrição cadastrada para este produto." }}
+                        </p>
+                    </div>
+
+                    <div class="dashboard-pill-row dashboard-detail-pill-row">
+                        <span class="dashboard-pill" id="dashboard-item-ca">CA {{ selected_item.ca }}</span>
+                        <span class="dashboard-pill{% if selected_item.estoque_baixo %} dashboard-pill-warning{% endif %}" id="dashboard-item-status">
+                            {% if selected_item.estoque_baixo %}
+                            Estoque em atenção
+                            {% else %}
+                            Estoque acima do mínimo
+                            {% endif %}
+                        </span>
+                        <span class="dashboard-pill" id="dashboard-item-movements">{{ selected_item.movimentacoes }} movimentação(ões)</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-info-grid">
+                    <article class="dashboard-info-card">
+                        <span class="dashboard-label">Quantidade atual</span>
+                        <strong class="dashboard-value dashboard-value-compact" id="dashboard-item-quantity">{{ selected_item.quantidade }}</strong>
+                        <span class="dashboard-caption">Unidades disponiveis agora</span>
+                    </article>
+
+                    <article class="dashboard-info-card">
+                        <span class="dashboard-label">Quantidade mínima</span>
+                        <strong class="dashboard-value dashboard-value-compact" id="dashboard-item-minimum">{{ selected_item.quantidade_minima }}</strong>
+                        <span class="dashboard-caption">Limite usado para alerta visual</span>
+                    </article>
+
+                    <article class="dashboard-info-card">
+                        <span class="dashboard-label">Reposição sugerida</span>
+                        <strong class="dashboard-value dashboard-value-compact" id="dashboard-item-restock">{{ selected_item.reposicao_sugerida }}</strong>
+                        <span class="dashboard-caption">Sugestao quando for preciso recompor</span>
+                    </article>
+
+                    <article class="dashboard-info-card">
+                        <span class="dashboard-label">Solicitações abertas</span>
+                        <strong class="dashboard-value dashboard-value-compact" id="dashboard-item-orders">{{ selected_item.pedidos_abertos }}</strong>
+                        <span class="dashboard-caption">Pedidos ainda pendentes desse produto</span>
+                    </article>
+                </div>
+            </section>
+
+            <section class="content-card dashboard-chart-card">
+                <div class="content-card-header">
+                    <h2 class="page-title fs-4">Histórico de quantidade</h2>
+                    <p class="page-subtitle">
+                        A linha cheia mostra a quantidade do produto ao longo das movimentações. A linha tracejada mostra a quantidade mínima.
+                    </p>
+                </div>
+
+                <div class="dashboard-chart-shell">
+                        <canvas id="dashboard-quantity-chart" aria-label="Gráfico de quantidade por produto"></canvas>
+                </div>
+
+                <div class="dashboard-chart-footer">
+                    <span class="dashboard-caption" id="dashboard-item-last-move">
+                    Última movimentação: {{ selected_item.ultima_movimentacao }}
+                    </span>
+                    <span class="dashboard-caption" id="dashboard-item-alert-copy">
+                        {% if selected_item.estoque_baixo %}
+                        Este item está no mínimo ou abaixo dele e merece acompanhamento mais próximo.
+                        {% else %}
+                        Este item ainda está acima do mínimo definido para operação.
+                        {% endif %}
+                    </span>
+                </div>
+            </section>
+        </div>
+    </div>
+    {% else %}
+    <section class="dashboard-empty-state">
+        <h2 class="dashboard-detail-title">Nenhum produto ativo para acompanhar</h2>
+        <p class="dashboard-detail-text">
+            Assim que houver um produto ativo com estoque cadastrado, o painel interativo aparecera aqui.
+        </p>
+        <a href="{{ url_for('abre_cadastro_epi') }}" class="btn btn-brand">Cadastrar produto</a>
+    </section>
+    {% endif %}
+</section>
+
+<div class="row g-4 mt-1">
+    <div class="col-12 col-xl-6">
+        <section class="content-card h-100">
+            <div class="content-card-header">
+                <h2 class="page-title fs-4">Produtos em atenção</h2>
+                <p class="page-subtitle">
+                    Itens que estão mais próximos do mínimo para priorizar reposição e acompanhamento.
+                </p>
+            </div>
+
+            <div class="dashboard-note-stack">
+                {% for item in dashboard.estoques_criticos %}
+                <article class="dashboard-note-card">
+                    <div class="dashboard-note-main">
+                        <strong>{{ item.epi_nome }}</strong>
+                        <span class="dashboard-caption">
+                            Atual: {{ item.quantidade }} | Mínimo: {{ item.quantidadeMin }} | Reposição sugerida: {{ item.reposicao_sugerida }}
+                        </span>
+                    </div>
+                    <a href="{{ url_for('fazer_pedido_route', epi_id=item.epi_id) }}" class="action-button action-button-primary">
+                        Solicitar compra
+                    </a>
+                </article>
+                {% else %}
+                <div class="dashboard-note-card dashboard-note-card-empty">
+                <span class="dashboard-caption">Nenhum produto ativo está em nível crítico no momento.</span>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-6">
+        <section class="content-card dashboard-side-panel h-100">
+            <div class="content-card-header">
+                <h2 class="page-title fs-4">Acesso rapido</h2>
+                <p class="page-subtitle">
+                    Atalhos para os fluxos mais usados do almoxarifado e para o acompanhamento das solicitações.
+                </p>
+            </div>
+
+            <div class="dashboard-link-stack">
+                <a href="{{ url_for('pagina_estoque') }}" class="dashboard-link-card">
+                    <span class="dashboard-link-title">Gerenciar estoque</span>
+                    <span class="dashboard-link-text">Registrar entradas, retiradas e acompanhar o estoque atual.</span>
+                </a>
+                <a href="{{ url_for('pagina_registro_movimentacoes') }}" class="dashboard-link-card">
+                    <span class="dashboard-link-title">Registro de entradas e saídas</span>
+                    <span class="dashboard-link-text">Consultar o histórico detalhado das movimentações feitas no sistema.</span>
+                </a>
+                <a href="{{ url_for('pagina_registro_solicitacoes') }}" class="dashboard-link-card">
+                    <span class="dashboard-link-title">Fechar solicitações abertas</span>
+                <span class="dashboard-link-text">Concluir pedidos com entrada ou encerrar sem entrada quando necessário.</span>
+                </a>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if dashboard.itens_dashboard %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script id="dashboard-data" type="application/json">
+    {{ {"items": dashboard.itens_dashboard, "selected_item_id": dashboard.selected_item_id} | tojson }}
+</script>
+<script>
+(() => {
+    const payloadElement = document.getElementById("dashboard-data");
+    if (!payloadElement) {
+        return;
+    }
+
+    const payload = JSON.parse(payloadElement.textContent);
+    const items = Array.isArray(payload.items) ? payload.items : [];
+    if (!items.length) {
+        return;
+    }
+
+    const itemMap = new Map(items.map((item) => [String(item.id), item]));
+    const selectedFromServer = itemMap.get(String(payload.selected_item_id));
+    const firstItem = items[0];
+    let activeItem = selectedFromServer || firstItem;
+
+    const nameElement = document.getElementById("dashboard-item-name");
+    const descriptionElement = document.getElementById("dashboard-item-description");
+    const caElement = document.getElementById("dashboard-item-ca");
+    const statusElement = document.getElementById("dashboard-item-status");
+    const movementsElement = document.getElementById("dashboard-item-movements");
+    const quantityElement = document.getElementById("dashboard-item-quantity");
+    const minimumElement = document.getElementById("dashboard-item-minimum");
+    const restockElement = document.getElementById("dashboard-item-restock");
+    const ordersElement = document.getElementById("dashboard-item-orders");
+    const lastMoveElement = document.getElementById("dashboard-item-last-move");
+    const alertCopyElement = document.getElementById("dashboard-item-alert-copy");
+    const selectorButtons = document.querySelectorAll("[data-dashboard-select]");
+    const chartElement = document.getElementById("dashboard-quantity-chart");
+
+    if (!chartElement || typeof Chart === "undefined") {
+        return;
+    }
+
+    const quantityChart = new Chart(chartElement, {
+        type: "line",
+        data: {
+            labels: activeItem.chart_labels,
+            datasets: [
+                {
+                    label: "Quantidade",
+                    data: activeItem.chart_quantidades,
+                    borderColor: "#111111",
+                    backgroundColor: "rgba(240, 165, 0, 0.18)",
+                    fill: true,
+                    stepped: true,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 5,
+                    tension: 0
+                },
+                {
+                    label: "Quantidade mínima",
+                    data: activeItem.chart_minimos,
+                    borderColor: "#f0a500",
+                    backgroundColor: "rgba(240, 165, 0, 0)",
+                    borderDash: [8, 6],
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: "index",
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        color: "#1f1f1f",
+                        usePointStyle: true,
+                        padding: 18
+                    }
+                },
+                tooltip: {
+                    backgroundColor: "rgba(17, 17, 17, 0.95)",
+                    titleColor: "#ffffff",
+                    bodyColor: "#ffffff",
+                    padding: 12,
+                    displayColors: true
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: "#5f5a52"
+                    },
+                    grid: {
+                        color: "rgba(17, 17, 17, 0.06)"
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: "#5f5a52",
+                        precision: 0
+                    },
+                    grid: {
+                        color: "rgba(17, 17, 17, 0.08)"
+                    }
+                }
+            }
+        }
+    });
+
+    function updateSelectorState(itemId) {
+        selectorButtons.forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.epiId === itemId);
+        });
+    }
+
+    function updateStatusPill(item) {
+        statusElement.textContent = item.estoque_baixo
+            ? "Estoque em atenção"
+            : "Estoque acima do mínimo";
+        statusElement.classList.toggle("dashboard-pill-warning", Boolean(item.estoque_baixo));
+    }
+
+    function updateDetailPanel(item) {
+        nameElement.textContent = item.nome;
+        descriptionElement.textContent = item.descricao || "Sem descrição cadastrada para este produto.";
+        caElement.textContent = `CA ${item.ca}`;
+        movementsElement.textContent = `${item.movimentacoes} movimentação(ões)`;
+        quantityElement.textContent = item.quantidade;
+        minimumElement.textContent = item.quantidade_minima;
+        restockElement.textContent = item.reposicao_sugerida;
+        ordersElement.textContent = item.pedidos_abertos;
+        lastMoveElement.textContent = `Última movimentação: ${item.ultima_movimentacao}`;
+        alertCopyElement.textContent = item.estoque_baixo
+            ? "Este item está no mínimo ou abaixo dele e merece acompanhamento mais próximo."
+            : "Este item ainda está acima do mínimo definido para operação.";
+        updateStatusPill(item);
+    }
+
+    function updateChart(item) {
+        quantityChart.data.labels = item.chart_labels;
+        quantityChart.data.datasets[0].data = item.chart_quantidades;
+        quantityChart.data.datasets[1].data = item.chart_minimos;
+        quantityChart.update();
+    }
+
+    function selectItem(itemId) {
+        const nextItem = itemMap.get(String(itemId));
+        if (!nextItem) {
+            return;
+        }
+
+        activeItem = nextItem;
+        updateSelectorState(String(activeItem.id));
+        updateDetailPanel(activeItem);
+        updateChart(activeItem);
+    }
+
+    selectorButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            selectItem(button.dataset.epiId);
+        });
+    });
+
+    selectItem(String(activeItem.id));
+})();
+</script>
+{% endif %}
+{% endblock %}
+
+

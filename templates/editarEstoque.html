@@ -1,0 +1,45 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Editar Estoque
+{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <section class="content-card">
+            <div class="text-center content-card-header">
+                <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                <h1 class="section-title mt-3 mb-2">Editar estoque</h1>
+                <p class="section-subtitle mb-0">Defina a nova quantidade para {{ estoque.epi_nome }}.</p>
+            </div>
+
+            <form method="POST" action="/editar_estoque/{{ estoque.id }}" class="d-grid gap-3">
+                {{ csrf_token_field() }}
+                <div>
+                    <label class="form-label">Produtos</label>
+                    <input class="form-control inputlogin" type="text" value="{{ estoque.epi_nome }}" disabled>
+                </div>
+                <div>
+                    <label class="form-label">ID do produto</label>
+                    <input class="form-control inputlogin" type="text" value="{{ estoque.epi_id }}" disabled>
+                </div>
+                <div>
+                    <label class="form-label" for="quantidade">Quantidade</label>
+                    <input class="form-control inputlogin" id="quantidade" type="number" name="quantidade" placeholder="Nova quantidade" value="{{ form_data.get('quantidade', estoque.quantidade) }}">
+                </div>
+                <div>
+                    <label class="form-label" for="status">Status do estoque</label>
+                    <select class="form-select inputlogin" id="status" name="status">
+                        <option value="1" {% if form_data.get('status', estoque.status)|string == '1' %}selected{% endif %}>Ativo</option>
+                        <option value="0" {% if form_data.get('status', estoque.status)|string == '0' %}selected{% endif %}>Inativo</option>
+                    </select>
+                </div>
+                <button class="btn btn-brand botaologin w-100" type="submit">Salvar estoque</button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+

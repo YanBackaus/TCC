@@ -1,0 +1,52 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Editar produto
+{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <section class="content-card">
+            <div class="text-center content-card-header">
+                <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                <h1 class="section-title mt-3 mb-2">Editar produto</h1>
+                <p class="section-subtitle mb-0">Atualize os dados do produto selecionado.</p>
+            </div>
+
+            <form method="POST" action="/editar_epi/{{ epi_id }}" class="d-grid gap-3">
+                {{ csrf_token_field() }}
+                <div>
+                    <label class="form-label" for="nome">Nome</label>
+                    <input class="form-control inputlogin" id="nome" type="text" name="nome" placeholder="Nome do produto" value="{{ dados_epi.get('nome', '') }}">
+                </div>
+                <div>
+                    <label class="form-label" for="tipo">Tipo</label>
+                    <input class="form-control inputlogin" id="tipo" type="text" name="tipo" placeholder="Tipo do produto" value="{{ dados_epi.get('tipo', '') }}">
+                </div>
+                <div>
+                    <label class="form-label" for="descricao">Descrição</label>
+                    <input class="form-control inputlogin" id="descricao" type="text" name="descricao" placeholder="Descrição do produto" value="{{ dados_epi.get('descricao', '') }}">
+                </div>
+                <div>
+                    <label class="form-label" for="quantidadeMin">Quantidade mínima</label>
+                    <input class="form-control inputlogin" id="quantidadeMin" type="number" name="quantidadeMin" placeholder="Deixe em branco para manter" value="{{ dados_epi.get('quantidadeMin', '') }}">
+                </div>
+                <div>
+                    <label class="form-label" for="ca">CA opcional</label>
+                    <input class="form-control inputlogin" id="ca" type="number" name="ca" placeholder="Deixe em branco para manter" value="{{ dados_epi.get('ca', '') }}">
+                </div>
+                <div>
+                    <label class="form-label" for="status">Status</label>
+                    <select class="form-select inputlogin" id="status" name="status">
+                        <option value="1" {% if dados_epi.get('status', 1)|string == '1' %}selected{% endif %}>Ativo</option>
+                        <option value="0" {% if dados_epi.get('status', 1)|string == '0' %}selected{% endif %}>Inativo</option>
+                    </select>
+                </div>
+                <button class="btn btn-brand botaologin w-100" type="submit">Salvar alterações</button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}
+

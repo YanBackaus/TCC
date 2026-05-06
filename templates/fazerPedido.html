@@ -1,0 +1,114 @@
+{% extends "template.html" %}
+{% from "_help_tooltip.html" import help_tooltip %}
+
+{% block titulo %}
+Solicitar Compra
+{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <section class="content-card form-screen-card">
+            <div class="form-screen-hero">
+                <div class="form-screen-header">
+                    <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                    <div class="form-screen-copy">
+                        <span class="form-screen-kicker">Solicitação de compra</span>
+                        <h1 class="form-screen-title">Solicitar compra</h1>
+                        <p class="form-screen-subtitle">Monte uma solicitação por e-mail ao setor de compras para o produto {{ epi.nome }} e confirme antes de registrar.</p>
+                    </div>
+                </div>
+
+                <div class="form-screen-chip-row">
+                    <span class="form-screen-chip">Estoque atual: {{ epi.estoque_atual }}</span>
+                    <span class="form-screen-chip">Mínimo: {{ epi.quantidadeMin }}</span>
+                    <span class="form-screen-chip">Registro só após confirmação</span>
+                </div>
+            </div>
+
+            <div class="form-screen-body">
+                <div class="form-help-inline form-help-inline-start">
+                    <span class="form-tip-label">Ajuda da tela</span>
+                    {% call help_tooltip("Ajuda sobre a solicitação de compra", wide=True) %}
+                    <strong class="help-tooltip-title">Como a solicitação funciona</strong>
+                    <p class="help-tooltip-text mb-0">Informe a quantidade desejada e explique o motivo da reposição. O sistema vai montar o e-mail e pedir sua confirmação antes de registrar a solicitação.</p>
+                    {% endcall %}
+                </div>
+
+                <form method="POST" action="/fazer_pedido/{{ epi.id }}" class="form-screen-form">
+                    {{ csrf_token_field() }}
+                    <div class="form-grid">
+                        <div class="field-span-full">
+                            <div class="field-label-row">
+                                <label class="form-label">Produtos</label>
+                                {% call help_tooltip("Ajuda sobre o produto da solicitação") %}
+                                <strong class="help-tooltip-title">Item solicitado</strong>
+                                <p class="help-tooltip-text mb-0">Este é o item para o qual a compra será solicitada.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" type="text" value="{{ epi.nome }}" disabled>
+                        </div>
+
+                        <div>
+                            <div class="field-label-row">
+                                <label class="form-label" for="quantidade">Quantidade</label>
+                                {% call help_tooltip("Ajuda sobre o campo Quantidade") %}
+                                <strong class="help-tooltip-title">Quantidade desejada</strong>
+                                <p class="help-tooltip-text mb-0">Digite a quantidade que deve ser solicitada ao setor de compras.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" id="quantidade" type="number" name="quantidade" placeholder="Quantidade desejada" value="{{ form_data.get('quantidade', '') }}">
+                        </div>
+
+                        <div class="field-span-full">
+                            <div class="field-label-row">
+                                <label class="form-label" for="observacao">Observação</label>
+                                {% call help_tooltip("Ajuda sobre o campo Observação") %}
+                                <strong class="help-tooltip-title">Motivo do pedido</strong>
+                                <p class="help-tooltip-text mb-0">Explique o motivo do pedido, como reposição urgente, aumento de consumo ou previsao de uso.</p>
+                                {% endcall %}
+                            </div>
+                            <textarea class="form-control" id="observacao" name="observacao" rows="4" placeholder="Motivo do pedido">{{ form_data.get('observacao', '') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-submit-wrap">
+                        <button class="btn btn-brand botaologin" type="submit">Pré-visualizar solicitação</button>
+                    </div>
+                </form>
+
+                {% if pedido_email %}
+                <div class="alert alert-warning mb-0">
+                    <h2 class="h5 mb-3">
+                        {% if pedido_pendente %}
+                        Revise e confirme a solicitação
+                        {% else %}
+                        E-mail pronto para envio
+                        {% endif %}
+                    </h2>
+                    <p class="mb-2"><strong>Para:</strong> {{ pedido_email.destinatario }}</p>
+                    <p class="mb-2"><strong>Assunto:</strong> {{ pedido_email.assunto }}</p>
+                    <label class="form-label" for="mensagem-email">Mensagem</label>
+                    <textarea class="form-control mb-3" id="mensagem-email" rows="8" readonly>{{ pedido_email.mensagem }}</textarea>
+                    {% if pedido_pendente %}
+                    <form method="POST" action="{{ url_for('confirmar_pedido_route', epi_id=epi.id) }}" class="d-grid gap-3">
+                        {{ csrf_token_field() }}
+                        <input type="hidden" name="quantidade" value="{{ form_data.get('quantidade', '') }}">
+                        <input type="hidden" name="observacao" value="{{ form_data.get('observacao', '') }}">
+                        <button class="btn btn-brand w-100" type="submit">Confirmar solicitação</button>
+                    </form>
+                    <p class="small text-secondary mt-3 mb-0">
+                        A solicitação só entra no sistema depois da confirmação.
+                    </p>
+                    {% else %}
+                    <a class="btn btn-brand w-100" href="{{ pedido_email.mailto_url }}">Abrir e-mail para o setor de compras</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,93 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+E-mails de teste
+{% endblock %}
+
+{% block conteudo %}
+<div class="row g-4">
+    <div class="col-12 col-xl-5">
+        <section class="content-card h-100">
+            <div class="content-card-header page-header">
+                <div class="page-header-main">
+                    <h1 class="page-title">E-mails de teste</h1>
+                    <p class="page-subtitle">Mensagens recebidas pelo servidor SMTP local.</p>
+                </div>
+                <div class="page-header-actions">
+                    <a class="btn btn-outline-dark rounded-pill" href="{{ url_for('pagina_configuracoes') }}">Voltar</a>
+                </div>
+            </div>
+
+            <div class="list-group list-group-flush">
+                {% for email in emails %}
+                <a href="{{ url_for('detalhe_email_teste', filename=email.filename) }}" class="list-group-item list-group-item-action px-0 {% if selected_email and selected_email.filename == email.filename %}active border-0 rounded-4 px-3{% endif %}">
+                    <div class="fw-semibold">{{ email.subject }}</div>
+                    <div class="small {% if selected_email and selected_email.filename == email.filename %}text-white-50{% else %}text-secondary{% endif %}">
+                        {{ email.from }} -> {{ email.to }}
+                    </div>
+                    <div class="small {% if selected_email and selected_email.filename == email.filename %}text-white-50{% else %}text-secondary{% endif %}">
+                        {{ email.preview or 'Sem conteúdo de texto.' }}
+                    </div>
+                </a>
+                {% else %}
+                <div class="list-group-item px-0 text-secondary">
+                    Nenhum e-mail de teste encontrado em `/.smtp-test-inbox`.
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-7">
+        <section class="content-card h-100">
+            {% if selected_email %}
+            <div class="content-card-header">
+                <h2 class="page-title fs-4">{{ selected_email.subject }}</h2>
+                <p class="page-subtitle">Arquivo: {{ selected_email.filename }}</p>
+            </div>
+
+            {% if selected_email.links %}
+            <div class="mb-4 d-flex flex-wrap gap-2">
+                {% for link in selected_email.links %}
+                <a class="btn btn-brand" href="{{ link }}" target="_blank" rel="noopener noreferrer">Abrir link detectado</a>
+                {% endfor %}
+            </div>
+            <div class="settings-help mb-4">
+                Use o botão acima para abrir o link decodificado do e-mail. O conteúdo bruto abaixo pode mostrar o link quebrado por causa do formato técnico da mensagem.
+            </div>
+            {% endif %}
+
+            <div class="email-meta-grid mb-4">
+                <div>
+                    <strong>De:</strong><br>
+                    <span class="text-secondary">{{ selected_email.from or 'Não informado' }}</span>
+                </div>
+                <div>
+                    <strong>Para:</strong><br>
+                    <span class="text-secondary">{{ selected_email.to or 'Não informado' }}</span>
+                </div>
+                <div>
+                    <strong>Data:</strong><br>
+                    <span class="text-secondary">{{ selected_email.date or 'Não informada' }}</span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Mensagem</label>
+                <textarea class="form-control email-preview" rows="12" readonly>{{ selected_email.body }}</textarea>
+            </div>
+
+            <div>
+                <label class="form-label">Conteúdo bruto</label>
+                <textarea class="form-control email-preview email-preview-raw" rows="14" readonly>{{ selected_email.raw }}</textarea>
+            </div>
+            {% else %}
+            <div class="content-card-header">
+                <h2 class="page-title fs-4">Selecione um e-mail</h2>
+                <p class="page-subtitle">Escolha uma mensagem na lista ao lado para visualizar os detalhes.</p>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

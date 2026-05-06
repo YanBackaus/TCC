@@ -1,0 +1,38 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+{% if is_first_access %}
+Primeiro acesso
+{% else %}
+Esqueci a senha
+{% endif %}
+{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <section class="content-card">
+            <div class="text-center content-card-header">
+                <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                {% if is_first_access %}
+                <h1 class="section-title mt-3 mb-2">Definir senha do primeiro acesso</h1>
+                <p class="section-subtitle mb-0">Você entrou com a senha provisória. Agora escolha uma nova senha para continuar usando o sistema.</p>
+                {% else %}
+                <h1 class="section-title mt-3 mb-2">Definir nova senha</h1>
+                <p class="section-subtitle mb-0">Digite a nova senha para finalizar a recuperação pelo link enviado ao seu e-mail.</p>
+                {% endif %}
+            </div>
+
+                <form method="POST" action="{% if is_first_access %}{{ url_for('primeiro_acesso') }}{% else %}{{ url_for('mudar_senha', token=reset_token) }}{% endif %}" class="d-grid gap-3">
+                    {{ csrf_token_field() }}
+                    <div>
+                    <label class="form-label" for="senha">Nova senha</label>
+                    <input class="form-control inputlogin" id="senha" type="password" name="senha" placeholder="Nova senha">
+                    <div class="form-field-help">Depois de salvar, essa senha passa a ser a senha definitiva de acesso do usuário.</div>
+                </div>
+                <button class="btn btn-brand botaologin w-100" type="submit">Atualizar senha</button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Usuários
+{% endblock %}
+
+{% block conteudo %}
+<section class="content-card table-card">
+    <div class="content-card-header page-header">
+        <div class="page-header-main">
+            <h1 class="page-title">Usuários</h1>
+            <p class="page-subtitle">Gerencie os usuários cadastrados no sistema.</p>
+        </div>
+        <div class="page-header-actions">
+            <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+        </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('pagina_usuarios') }}" class="row g-3 align-items-end mb-4 filter-bar">
+        <div class="col-12 col-lg-7">
+            <label class="form-label" for="busca">Pesquisar usuário</label>
+                    <input
+                        class="form-control"
+                        id="busca"
+                        type="search"
+                        name="busca"
+                        placeholder="Digite nome ou e-mail"
+                        value="{{ search }}"
+                    >
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <input type="hidden" name="status" value="{{ 'inativos' if show_inactive else 'ativos' }}">
+            <button type="submit" class="btn btn-brand w-100">Pesquisar</button>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <a
+                href="{{ url_for('pagina_usuarios', status='ativos' if show_inactive else 'inativos', busca=search) }}"
+                class="btn btn-outline-dark rounded-pill w-100"
+            >
+                {{ 'Mostrar ativos' if show_inactive else 'Mostrar inativos' }}
+            </a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table app-table align-middle">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Tipo</th>
+                    <th>Senha</th>
+                    <th>Status</th>
+                    <th class="table-actions">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td data-label="Nome">{{ usuario.nome }}</td>
+                    <td data-label="E-mail">{{ usuario.email }}</td>
+                    <td data-label="Tipo">{{ usuario.tipo_label }}</td>
+                    <td data-label="Senha">
+                        <span class="badge {% if usuario.precisa_trocar_senha %}text-bg-warning{% else %}text-bg-success{% endif %}">
+                            {{ usuario.senha_provisoria_label }}
+                        </span>
+                    </td>
+                    <td data-label="Status">
+                        <span class="badge {% if usuario.status == 1 %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                            {{ usuario.status_label }}
+                        </span>
+                    </td>
+                    <td class="table-actions" data-label="Ações">
+                        <div class="action-group">
+                            {% if usuario.status == 1 %}
+                            <form method="POST" action="{{ url_for('desativar_usuario_route', user_id=usuario.id) }}" class="m-0">
+                                {{ csrf_token_field() }}
+                                <button type="submit" class="action-button action-button-danger">Desativar</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('gerar_senha_provisoria_route', user_id=usuario.id) }}" class="m-0">
+                                {{ csrf_token_field() }}
+                                <button type="submit" class="action-button action-button-neutral">Nova senha</button>
+                            </form>
+                            {% else %}
+                            <form method="POST" action="{{ url_for('ativar_usuario_route', user_id=usuario.id) }}" class="m-0">
+                                {{ csrf_token_field() }}
+                                <button type="submit" class="action-button action-button-success">Ativar</button>
+                            </form>
+                            {% endif %}
+                            <a href="{{ url_for('atualizar_usuario', user_id=usuario.id) }}" class="action-button action-button-primary">Editar</a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-secondary">
+                        Nenhum usuário encontrado para o filtro selecionado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

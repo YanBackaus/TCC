@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+        crossorigin="anonymous"
+    >
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% include "_favicons.html" %}
+    <title>Login</title>
+</head>
+<body class="auth-page">
+    <main class="container auth-wrapper">
+        <div class="auth-card mx-auto">
+            <div class="text-center mb-4">
+                <img class="brand-mark brand-mark-lg" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                <h1 class="auth-title mt-3 mb-2">Bem-vindo</h1>
+                <p class="auth-subtitle mb-0">Acesse sua conta para entrar no gerenciador.</p>
+            </div>
+
+            {% include "_flash_messages.html" %}
+
+            <form method="POST" action="/validalogin" class="d-grid gap-3">
+                {{ csrf_token_field() }}
+                <div>
+                    <label class="form-label" for="email">E-mail</label>
+                    <input class="form-control inputlogin" id="email" type="text" name="email" placeholder="Digite seu e-mail">
+                </div>
+                <div>
+                    <label class="form-label" for="senha">Senha</label>
+                    <input class="form-control inputlogin" id="senha" type="password" name="senha" placeholder="Digite sua senha">
+                </div>
+                <button type="submit" class="btn btn-brand botaologin w-100">Entrar</button>
+            </form>
+
+            <div class="d-grid gap-2 mt-3">
+                <a href="/esqueci_senha" class="btn btn-outline-dark rounded-pill">Esqueci minha senha</a>
+                <a href="/cadastro" class="btn btn-outline-brand rounded-pill">Criar conta</a>
+            </div>
+        </div>
+    </main>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"
+    ></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Editar Usuário
+{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <section class="content-card">
+            <div class="text-center content-card-header">
+                <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                <h1 class="section-title mt-3 mb-2">{{ "Meu perfil" if is_own_profile else "Editar usuário" }}</h1>
+                <p class="section-subtitle mb-0">
+                    {% if is_own_profile %}
+                    Atualize seus dados pessoais sem depender do administrador.
+                    {% else %}
+                    Atualize os dados do usuário selecionado.
+                    {% endif %}
+                </p>
+            </div>
+
+            <form method="POST" action="{{ url_for('atualizar_usuario', user_id=id) }}" class="d-grid gap-3">
+                {{ csrf_token_field() }}
+                <div>
+                    <label class="form-label" for="nome">Nome</label>
+                    <input class="form-control inputlogin" id="nome" type="text" name="nome" placeholder="Nome" value="{{ dados_usuario.nome }}">
+                </div>
+                <div>
+                    <label class="form-label" for="email">E-mail</label>
+                    <input class="form-control inputlogin" id="email" type="email" name="email" placeholder="E-mail" value="{{ dados_usuario.email }}">
+                </div>
+                <div>
+                    <label class="form-label" for="senha">Nova senha</label>
+                    <input class="form-control inputlogin" id="senha" type="password" name="senha" placeholder="Deixe em branco para manter a senha atual">
+                    <div class="form-field-help">
+                        {% if is_own_profile %}
+                        Se você definir uma nova senha aqui, ela passa a valer imediatamente.
+                        {% else %}
+                        Se você definir uma nova senha aqui, o usuário será obrigado a trocá-la no próximo acesso.
+                        {% endif %}
+                    </div>
+                </div>
+                {% if can_edit_type %}
+                <div>
+                    <label class="form-label" for="tipo">Tipo de usuário</label>
+                    <select class="form-select inputlogin" id="tipo" name="tipo">
+                        {% for tipo in tipos_usuario %}
+                        <option value="{{ tipo.value }}" {% if dados_usuario.tipo|string == tipo.value|string %}selected{% endif %}>
+                            {{ tipo.label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <button class="btn btn-brand botaologin w-100" type="submit">Atualizar</button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

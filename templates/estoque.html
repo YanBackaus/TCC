@@ -1,0 +1,199 @@
+{% extends "template.html" %}
+
+{% block titulo %}
+Gerenciador
+{% endblock %}
+
+{% block conteudo %}
+<section class="content-card table-card">
+    <div class="content-card-header page-header">
+        <div class="page-header-main">
+            <h1 class="page-title">Gerenciar estoque</h1>
+            <p class="page-subtitle">Registre, edite, retire estoque e acompanhe notificações e solicitações de compra.</p>
+        </div>
+        <div class="page-header-actions">
+            <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline">
+                <span class="dashboard-label">Produtos listados</span>
+                <strong class="dashboard-value">{{ produtos|length }}</strong>
+                <span class="dashboard-caption">Itens visiveis na tabela</span>
+            </section>
+        </div>
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline">
+                <span class="dashboard-label">Com estoque</span>
+                <strong class="dashboard-value">{{ produtos|selectattr('possui_estoque')|list|length }}</strong>
+                <span class="dashboard-caption">Produtos com registro de estoque</span>
+            </section>
+        </div>
+        <div class="col-12 col-md-4">
+            <section class="dashboard-metric dashboard-metric-inline dashboard-metric-warning">
+                <span class="dashboard-label">Reposição</span>
+                <strong class="dashboard-value">{{ produtos|selectattr('estoque_baixo')|list|length }}</strong>
+                <span class="dashboard-caption">Itens em nível de atenção</span>
+            </section>
+        </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('pagina_estoque') }}" class="row g-3 align-items-end mb-4 filter-bar">
+        <div class="col-12 col-lg-8">
+            <label class="form-label" for="busca-estoque">Pesquisar estoque</label>
+            <input
+                class="form-control"
+                id="busca-estoque"
+                type="search"
+                name="busca"
+                placeholder="Digite nome do produto, tipo, descrição, CA, status ou alerta"
+                value="{{ search }}"
+            >
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <button type="submit" class="btn btn-brand w-100">Pesquisar</button>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <a href="{{ url_for('pagina_estoque') }}" class="btn btn-outline-dark rounded-pill w-100">Limpar</a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table app-table align-middle">
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Tipo</th>
+                    <th>Quantidade</th>
+                    <th>Mínimo</th>
+                    <th>Status</th>
+                    <th>Alerta</th>
+                    <th class="table-actions">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for produto in produtos %}
+                <tr>
+                    <td data-label="Produto">{{ produto.epi_nome }}</td>
+                    <td data-label="Tipo">{{ produto.epi_tipo }}</td>
+                    <td data-label="Quantidade">{{ produto.quantidade }}</td>
+                    <td data-label="Mínimo">{{ produto.quantidadeMin }}</td>
+                    <td data-label="Status">
+                        <span class="badge {% if produto.estoque_ativo %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                            {{ produto.status_label }}
+                        </span>
+                    </td>
+                    <td data-label="Alerta">
+                        {% if not produto.estoque_ativo %}
+                        <span class="badge text-bg-secondary">Inativo</span>
+                        {% elif produto.estoque_baixo %}
+                        <span class="badge text-bg-warning">Notificar produto acabando</span>
+                        {% else %}
+                        <span class="badge text-bg-light">Normal</span>
+                        {% endif %}
+                    </td>
+                    <td class="table-actions" data-label="Ações">
+                        <div class="action-group">
+                            {% if produto.estoque_ativo %}
+                            <a href="{{ url_for('registrar_estoque_route', epi_id=produto.epi_id) }}" class="action-button action-button-primary">Registrar</a>
+                            {% if produto.possui_estoque %}
+                            <a href="{{ url_for('retirar_estoque_route', stock_id=produto.estoque_id) }}" class="action-button action-button-danger">Retirar</a>
+                            {% endif %}
+                            <a href="{{ url_for('fazer_pedido_route', epi_id=produto.epi_id) }}" class="action-button action-button-neutral">Solicitar compra</a>
+                            {% endif %}
+                            {% if session.get('tipo') == 1 and produto.possui_estoque %}
+                            <a href="{{ url_for('editar_estoque_route', stock_id=produto.estoque_id) }}" class="action-button action-button-primary">Editar</a>
+                            {% endif %}
+                            {% if not produto.estoque_ativo and session.get('tipo') != 1 %}
+                            <span class="dashboard-caption">Inativo</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-secondary">
+                        Nenhum item de estoque encontrado para a pesquisa informada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="row g-4 mt-1">
+    <div class="col-12">
+        <section class="content-card">
+            <div class="content-card-header">
+                <h2 class="page-title fs-4">Notificacoes de reposição</h2>
+                <p class="page-subtitle">Quando o estoque chega no valor mínimo do produto, o sistema avisa que é preciso comprar mais.</p>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for notificacao in notificacoes %}
+                <div class="list-group-item px-0">
+                    <div class="fw-semibold">{{ notificacao.epi_nome }}</div>
+                    <div class="small text-secondary">{{ notificacao.mensagem }}</div>
+                    <div class="small text-secondary">
+                        Atual: {{ notificacao.quantidade_atual }} | Mínimo: {{ notificacao.quantidade_minima }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="list-group-item px-0 text-secondary">Nenhuma notificacao de reposição no momento.</div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-6">
+        <section class="content-card h-100">
+            <div class="content-card-header">
+                <h2 class="page-title fs-4">Registro de Entradas e saídas</h2>
+                <p class="page-subtitle">Consulte o histórico completo de movimentações em uma página detalhada.</p>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for log in logs %}
+                <div class="list-group-item px-0">
+                    <div class="fw-semibold">{{ log.tipo_label }}</div>
+                    <div class="small text-secondary">{{ log.epi_nome }} por {{ log.usuario_nome }}</div>
+                    <div class="small text-secondary">Quantidade: {{ log.quantidade }} | {{ log.data }}</div>
+                </div>
+                {% else %}
+                <div class="list-group-item px-0 text-secondary">Nenhum log registrado.</div>
+                {% endfor %}
+            </div>
+            <div class="mt-4">
+                <a href="{{ url_for('pagina_registro_movimentacoes') }}" class="btn btn-brand">Abrir registro completo</a>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-6">
+        <section class="content-card h-100">
+            <div class="content-card-header">
+                <h2 class="page-title fs-4">Registro de solicitações</h2>
+                <p class="page-subtitle">Acompanhe as solicitações em uma tela dedicada com mais detalhes.</p>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for pedido in pedidos %}
+                <div class="list-group-item px-0">
+                    <div class="fw-semibold">{{ pedido.epi_nome }} - {{ pedido.quantidade }} unidade(s)</div>
+                    <div class="small text-secondary">{{ pedido.usuario_nome }} - {{ pedido.status_label }}</div>
+                    <div class="small text-secondary">{{ pedido.observacao }}</div>
+                    <div class="small text-secondary">{{ pedido.data_pedido }}</div>
+                </div>
+                {% else %}
+                <div class="list-group-item px-0 text-secondary">Nenhuma solicitação registrada.</div>
+                {% endfor %}
+            </div>
+            <div class="mt-4">
+                <a href="{{ url_for('pagina_registro_solicitacoes') }}" class="btn btn-brand">Abrir registro completo</a>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+

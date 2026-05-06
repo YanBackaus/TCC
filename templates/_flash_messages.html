@@ -1,0 +1,10 @@
+{% set mensagens = get_flashed_messages() %}
+{% if mensagens %}
+<div class="flash-stack my-3">
+    {% for msg in mensagens %}
+    <div class="alert alert-warning border-0" role="alert">
+        {{ msg }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

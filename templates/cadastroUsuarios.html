@@ -1,0 +1,120 @@
+{% extends "template.html" %}
+{% from "_help_tooltip.html" import help_tooltip %}
+
+{% block titulo %}
+Formulário de Cadastro
+{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <section class="content-card form-screen-card">
+            <div class="form-screen-hero">
+                <div class="form-screen-header">
+                    <img class="brand-mark" src="{{ url_for('static', filename='img.png') }}" alt="Logo do sistema">
+                    <div class="form-screen-copy">
+                        <span class="form-screen-kicker">Cadastro de usuário</span>
+                        <h1 class="form-screen-title">Criar conta</h1>
+                        <p class="form-screen-subtitle">
+                            {% if pode_escolher_tipo %}
+                            Preencha os dados do colaborador, defina a senha e escolha o tipo de conta.
+                            {% else %}
+                            Preencha os dados abaixo para criar sua conta no sistema.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="form-screen-chip-row">
+                    <span class="form-screen-chip">Senha criptografada</span>
+                    <span class="form-screen-chip">Validação de e-mail</span>
+                    {% if pode_escolher_tipo %}
+                    <span class="form-screen-chip">Escolha do tipo de conta</span>
+                    {% else %}
+                    <span class="form-screen-chip">Conta criada como usuário padrão</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-screen-body">
+                <div class="form-help-inline form-help-inline-start">
+                    <span class="form-tip-label">Ajuda da tela</span>
+                    {% call help_tooltip("Ajuda sobre o cadastro de usuário", wide=True) %}
+                    <strong class="help-tooltip-title">Como funciona este cadastro</strong>
+                    <p class="help-tooltip-text mb-0">
+                        {% if pode_escolher_tipo %}
+                        Informe os dados do colaborador, escolha o tipo de conta e cadastre uma senha inicial para acesso.
+                        {% else %}
+                        Informe seus dados para criar um acesso como usuário padrão.
+                        {% endif %}
+                    </p>
+                    {% endcall %}
+                </div>
+
+                <form method="POST" action="/add_cadastro_usuarios" class="form-screen-form">
+                    {{ csrf_token_field() }}
+                    <div class="form-grid">
+                        <div class="field-span-full">
+                            <div class="field-label-row">
+                                <label class="form-label" for="nome">Nome</label>
+                                {% call help_tooltip("Ajuda sobre o campo Nome") %}
+                                <strong class="help-tooltip-title">Nome completo</strong>
+                                <p class="help-tooltip-text mb-0">Digite o nome completo para facilitar a identificação do usuário nas telas e nos registros.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" id="nome" type="text" name="nome" placeholder="Nome completo" value="{{ form_data.get('nome', '') }}">
+                        </div>
+
+                        <div class="field-span-full">
+                            <div class="field-label-row">
+                                <label class="form-label" for="email">E-mail</label>
+                                {% call help_tooltip("Ajuda sobre o campo E-mail") %}
+                                <strong class="help-tooltip-title">E-mail de acesso</strong>
+                                <p class="help-tooltip-text mb-0">Use um e-mail válido, porque ele será usado no login e na recuperação de senha.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" id="email" type="email" name="email" placeholder="nome@empresa.com" value="{{ form_data.get('email', '') }}">
+                        </div>
+
+                        <div class="field-span-full">
+                            <div class="field-label-row">
+                                <label class="form-label" for="senha">Senha</label>
+                                {% call help_tooltip("Ajuda sobre o campo Senha") %}
+                                <strong class="help-tooltip-title">Senha de acesso</strong>
+                                <p class="help-tooltip-text mb-0">A senha será armazenada criptografada e usada no login do usuário.</p>
+                                {% endcall %}
+                            </div>
+                            <input class="form-control inputlogin" id="senha" type="password" name="senha" placeholder="Senha de acesso">
+                        </div>
+
+                        {% if pode_escolher_tipo %}
+                        <div class="field-span-full">
+                            <div class="field-label-row">
+                                <label class="form-label" for="tipo">Tipo de usuário</label>
+                                {% call help_tooltip("Ajuda sobre o campo Tipo de usuário") %}
+                                <strong class="help-tooltip-title">Permissao da conta</strong>
+                                <p class="help-tooltip-text mb-0">Administrador pode gerenciar usuários e configurações. Usuário padrão opera o estoque e os pedidos.</p>
+                                {% endcall %}
+                            </div>
+                            <select class="form-select inputlogin" id="tipo" name="tipo">
+                                {% for tipo in tipos_usuario %}
+                                <option value="{{ tipo.value }}" {% if form_data.get('tipo', '0')|string == tipo.value|string %}selected{% endif %}>
+                                    {{ tipo.label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% else %}
+                        <input type="hidden" name="tipo" value="0">
+                        {% endif %}
+                    </div>
+
+                    <div class="form-submit-wrap">
+                        <button class="btn btn-brand botaologin" type="submit">Cadastrar</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

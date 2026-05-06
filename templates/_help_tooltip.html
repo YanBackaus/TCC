@@ -1,0 +1,10 @@
+{% macro help_tooltip(label, wide=False, align='left') -%}
+<div class="help-tooltip{% if wide %} help-tooltip-wide{% endif %}{% if align == 'center' %} help-tooltip-center{% elif align == 'right' %} help-tooltip-right{% endif %}">
+    <button type="button" class="help-tooltip-trigger" aria-label="{{ label }}">
+        <span class="material-symbols-outlined" aria-hidden="true">info</span>
+    </button>
+    <div class="help-tooltip-content" role="tooltip">
+        {{ caller() }}
+    </div>
+</div>
+{%- endmacro %}
