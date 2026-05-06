@@ -1,6 +1,7 @@
-﻿import mysql.connector
+import mysql.connector
+from mysql.connector import errorcode
 
-from gerenciador_app.config import DATABASE_CONFIG, DATABASE_NAME, SERVER_CONFIG
+from gerenciador_app.config import AUTO_CREATE_DATABASE, DATABASE_CONFIG, DATABASE_NAME, SERVER_CONFIG
 
 
 SCHEMA_STATEMENTS = [
@@ -129,6 +130,8 @@ RUNTIME_SCHEMA_STATEMENTS = [
     """,
 ]
 
+CORE_TABLES = ("epi", "estoque", "registroestoque", "usuarios")
+
 
 def get_server_connection():
     return mysql.connector.connect(**SERVER_CONFIG)
@@ -139,16 +142,75 @@ def get_db_connection():
 
 
 def initialize_database():
-    if database_exists():
-        execute_runtime_statements()
-        ensure_runtime_schema()
+    if _database_is_accessible():
+        ensure_database_schema()
         print(f"O banco de dados {DATABASE_NAME} existe e esta pronto para uso.")
         return
 
-    create_database()
-    execute_statements(SCHEMA_STATEMENTS)
+    if not AUTO_CREATE_DATABASE:
+        raise RuntimeError(
+            "Nao foi possivel acessar o banco configurado. "
+            "Crie o banco manualmente ou habilite AUTO_CREATE_DATABASE=1."
+        )
+
+    try:
+        if not database_exists():
+            create_database()
+        ensure_database_schema()
+    except mysql.connector.Error as exc:
+        raise RuntimeError(
+            "Nao foi possivel inicializar o banco de dados. "
+            "Verifique DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD "
+            "ou defina MYSQL_URL/DATABASE_URL com uma conexao MySQL valida."
+        ) from exc
+
+
+def _database_is_accessible():
+    try:
+        connection = get_db_connection()
+    except mysql.connector.Error as exc:
+        if exc.errno == errorcode.ER_BAD_DB_ERROR:
+            return False
+        raise
+
+    connection.close()
+    return True
+
+
+def ensure_database_schema():
+    core_table_count = _count_core_tables()
+
+    if core_table_count == 0:
+        execute_statements(SCHEMA_STATEMENTS)
+    elif core_table_count != len(CORE_TABLES):
+        raise RuntimeError(
+            "O schema principal do banco esta incompleto. "
+            "Verifique as tabelas principais antes de subir a aplicacao."
+        )
+
     execute_runtime_statements()
     ensure_runtime_schema()
+
+
+def _count_core_tables():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    placeholders = ", ".join(["%s"] * len(CORE_TABLES))
+
+    try:
+        cursor.execute(
+            f"""
+            SELECT COUNT(DISTINCT TABLE_NAME)
+            FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA = %s
+              AND TABLE_NAME IN ({placeholders});
+            """,
+            (DATABASE_NAME, *CORE_TABLES),
+        )
+        return cursor.fetchone()[0]
+    finally:
+        cursor.close()
+        connection.close()
 
 
 def database_exists():
@@ -175,7 +237,7 @@ def create_database():
     cursor = connection.cursor()
 
     try:
-        cursor.execute(f"CREATE DATABASE {DATABASE_NAME};")
+        cursor.execute(f"CREATE DATABASE `{DATABASE_NAME}`;")
         connection.commit()
     finally:
         cursor.close()
@@ -339,4 +401,3 @@ def run_query(query, params=None, dictionary=False, fetch_mode=None):
     finally:
         cursor.close()
         connection.close()
-
