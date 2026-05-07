@@ -11,10 +11,14 @@ from gerenciador_app.web.routes import register_routes
 
 def create_app():
     base_dir = Path(__file__).resolve().parent.parent
+    static_root = base_dir / "public"
+    if not static_root.exists():
+        static_root = base_dir / "static"
+
     app = Flask(
         __name__,
         template_folder=str(base_dir / "templates"),
-        static_folder=str(base_dir / "static"),
+        static_folder=str(static_root),
     )
     # Ajusta host e protocolo quando a aplicacao roda atras do proxy do Vercel.
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
